@@ -18,20 +18,5 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build: .
-    container_name: cabalgatas-app
-    env_file: .env
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:${DB_PORT:-5432}/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "8080:8080"
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-    restart: on-failure
-
 volumes:
   postgres_data:
