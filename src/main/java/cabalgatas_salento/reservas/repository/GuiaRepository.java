@@ -8,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface GuiaRepository extends JpaRepository<Guia, Long> {
 
@@ -16,10 +15,6 @@ public interface GuiaRepository extends JpaRepository<Guia, Long> {
 
     List<Guia> findByIsActiveTrueAndEliminadoFalse();
 
-    /**
-     * Primer guía activo que no está asignado a otra salida con conflicto de horario,
-     * ni ya asignado a la salida actual.
-     */
     @Query(nativeQuery = true, value = """
             SELECT g.* FROM guias g
             WHERE g.is_active = true AND g.eliminado = false
@@ -35,12 +30,13 @@ public interface GuiaRepository extends JpaRepository<Guia, Long> {
                 AND s.tiempo_fin > :inicio
                 AND s.estado != 'cancelado'
             )
-            LIMIT 1
+            LIMIT :cantidad
             """)
-    Optional<Guia> findPrimerDisponible(
+    List<Guia> findDisponibles(
             @Param("salidaId") Long salidaId,
             @Param("fecha") LocalDate fecha,
             @Param("inicio") LocalTime inicio,
-            @Param("fin") LocalTime fin
+            @Param("fin") LocalTime fin,
+            @Param("cantidad") int cantidad
     );
 }

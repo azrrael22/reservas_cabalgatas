@@ -27,6 +27,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReservacionServiceImpl implements ReservacionService {
 
+    private static final int CAPACIDAD_MAXIMA = 12;
+
     private final ReservacionRepository reservacionRepository;
     private final SalidaRepository salidaRepository;
     private final RutaRepository rutaRepository;
@@ -46,6 +48,7 @@ public class ReservacionServiceImpl implements ReservacionService {
         validarParticipantes(req.getNumPeople(), req.getParticipantes());
         Ruta ruta = buscarRuta(req.getRutaId());
         Salida salida = obtenerOCrearSalida(ruta, req.getFechaProgramada(), req.getTiempoInicio());
+        validarCapacidadMaxima(salida, req.getNumPeople());
         Reservacion reservacion = crearReservacion(salida, ruta, req.getNumPeople(), req.getParticipantes(), null, admin);
         asignarRecursos(salida);
         return reservacionMapper.toResponse(reservacion);
@@ -58,6 +61,7 @@ public class ReservacionServiceImpl implements ReservacionService {
         validarParticipantes(req.getNumPeople(), req.getParticipantes());
         Ruta ruta = buscarRuta(req.getRutaId());
         Salida salida = obtenerOCrearSalida(ruta, req.getFechaProgramada(), req.getTiempoInicio());
+        validarCapacidadMaxima(salida, req.getNumPeople());
         Reservacion reservacion = crearReservacion(salida, ruta, req.getNumPeople(), req.getParticipantes(), cliente, null);
         asignarRecursos(salida);
         return reservacionMapper.toResponse(reservacion);
@@ -72,6 +76,14 @@ public class ReservacionServiceImpl implements ReservacionService {
             throw new ReglaNegocioException("Solo se pueden modificar reservaciones en estado RESERVADO.");
         }
         validarParticipantes(req.getNumPeople(), req.getParticipantes());
+
+        int totalActual = reservacionRepository.sumarPersonasPorSalida(reservacion.getSalida().getId());
+        int nuevoTotal = totalActual - reservacion.getNumPeople() + req.getNumPeople();
+        if (nuevoTotal > CAPACIDAD_MAXIMA) {
+            int disponibles = CAPACIDAD_MAXIMA - (totalActual - reservacion.getNumPeople());
+            throw new ReglaNegocioException(
+                "No hay capacidad suficiente. Solo quedan " + disponibles + " lugar(es) disponibles.");
+        }
 
         reservacion.setNumPeople(req.getNumPeople());
         reservacion.setTotal(reservacion.getPrecioUnitario().multiply(BigDecimal.valueOf(req.getNumPeople())));
@@ -162,10 +174,11 @@ public class ReservacionServiceImpl implements ReservacionService {
 
     private void asignarRecursos(Salida salida) {
         int totalPersonas = reservacionRepository.sumarPersonasPorSalida(salida.getId());
-        int caballosNecesarios = totalPersonas + 1;
+        int guiasNecesarios = totalPersonas > 8 ? 2 : 1;
+        int caballosNecesarios = totalPersonas + guiasNecesarios;
+
         int caballosActuales = salidaCaballoRepository.countBySalidaId(salida.getId());
         int caballosAAsignar = caballosNecesarios - caballosActuales;
-
         if (caballosAAsignar > 0) {
             List<Caballo> disponibles = caballoRepository.findDisponibles(
                     salida.getId(),
@@ -180,21 +193,37 @@ public class ReservacionServiceImpl implements ReservacionService {
                         "Se necesitan " + caballosAAsignar + " caballo(s) adicional(es) " +
                         "pero solo hay " + disponibles.size() + " disponible(s).");
             }
-            List<SalidaCaballo> asignaciones = disponibles.stream()
+            salidaCaballoRepository.saveAll(disponibles.stream()
                     .map(c -> SalidaCaballo.builder().salida(salida).caballo(c).build())
-                    .toList();
-            salidaCaballoRepository.saveAll(asignaciones);
+                    .toList());
         }
 
-        if (!salidaGuiaRepository.existsBySalidaId(salida.getId())) {
-            Guia guia = guiaRepository.findPrimerDisponible(
+        int guiasActuales = salidaGuiaRepository.countBySalidaId(salida.getId());
+        int guiasAAsignar = guiasNecesarios - guiasActuales;
+        if (guiasAAsignar > 0) {
+            List<Guia> guiasDisponibles = guiaRepository.findDisponibles(
                     salida.getId(),
                     salida.getFechaProgramada(),
                     salida.getTiempoInicio(),
-                    salida.getTiempoFin()
-            ).orElseThrow(() -> new ReglaNegocioException(
-                    "No hay guías disponibles para la fecha y hora de esta salida."));
-            salidaGuiaRepository.save(SalidaGuia.builder().salida(salida).guia(guia).build());
+                    salida.getTiempoFin(),
+                    guiasAAsignar
+            );
+            if (guiasDisponibles.size() < guiasAAsignar) {
+                throw new ReglaNegocioException(
+                        "No hay guías disponibles para la fecha y hora de esta salida.");
+            }
+            salidaGuiaRepository.saveAll(guiasDisponibles.stream()
+                    .map(g -> SalidaGuia.builder().salida(salida).guia(g).build())
+                    .toList());
+        }
+    }
+
+    private void validarCapacidadMaxima(Salida salida, int nuevasPersonas) {
+        int personasActuales = reservacionRepository.sumarPersonasPorSalida(salida.getId());
+        if (personasActuales + nuevasPersonas > CAPACIDAD_MAXIMA) {
+            int disponibles = CAPACIDAD_MAXIMA - personasActuales;
+            throw new ReglaNegocioException(
+                    "La salida no tiene capacidad suficiente. Solo quedan " + disponibles + " lugar(es) disponibles.");
         }
     }
 

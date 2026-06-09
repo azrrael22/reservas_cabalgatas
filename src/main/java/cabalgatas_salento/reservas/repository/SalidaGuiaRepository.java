@@ -4,5 +4,5 @@ import cabalgatas_salento.reservas.entity.SalidaGuia;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SalidaGuiaRepository extends JpaRepository<SalidaGuia, Long> {
-    boolean existsBySalidaId(Long salidaId);
+    int countBySalidaId(Long salidaId);
 }
