@@ -8,7 +8,6 @@ import cabalgatas_salento.reservas.dto.response.ReservacionResponse;
 import cabalgatas_salento.reservas.entity.*;
 import cabalgatas_salento.reservas.entity.enums.EstadoReservacion;
 import cabalgatas_salento.reservas.entity.enums.EstadoSalida;
-import cabalgatas_salento.reservas.entity.enums.RolUsuario;
 import cabalgatas_salento.reservas.exception.RecursoNoEncontradoException;
 import cabalgatas_salento.reservas.exception.ReglaNegocioException;
 import cabalgatas_salento.reservas.mapper.ParticipanteMapper;
@@ -44,14 +43,10 @@ public class ReservacionServiceImpl implements ReservacionService {
     @Transactional
     public ReservacionResponse crearComoAdmin(ReservacionAdminRequest req, Long adminId) {
         Usuario admin = buscarUsuario(adminId);
-        Usuario cliente = buscarUsuario(req.getClientId());
-        if (cliente.getRole() != RolUsuario.CLIENTE) {
-            throw new ReglaNegocioException("El usuario con id " + req.getClientId() + " no es un cliente.");
-        }
         validarParticipantes(req.getNumPeople(), req.getParticipantes());
         Ruta ruta = buscarRuta(req.getRutaId());
         Salida salida = obtenerOCrearSalida(ruta, req.getFechaProgramada(), req.getTiempoInicio());
-        Reservacion reservacion = crearReservacion(salida, ruta, req.getNumPeople(), req.getParticipantes(), cliente, admin);
+        Reservacion reservacion = crearReservacion(salida, ruta, req.getNumPeople(), req.getParticipantes(), null, admin);
         asignarRecursos(salida);
         return reservacionMapper.toResponse(reservacion);
     }

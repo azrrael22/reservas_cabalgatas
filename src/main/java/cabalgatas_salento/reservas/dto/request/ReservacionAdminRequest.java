@@ -21,9 +21,6 @@ public class ReservacionAdminRequest {
     @NotNull(message = "La hora de inicio es requerida")
     private LocalTime tiempoInicio;
 
-    @NotNull(message = "El ID del cliente es requerido")
-    private Long clientId;
-
     @NotNull(message = "El número de personas es requerido")
     @Positive(message = "El número de personas debe ser positivo")
     private Integer numPeople;

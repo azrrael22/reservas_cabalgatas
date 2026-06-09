@@ -260,29 +260,33 @@
       "name": "03 - Caballos",
       "item": [
         {
-          "name": "Listar caballos",
+          "name": "Listar caballos (Admin)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
             "url": {
               "raw": "{{baseUrl}}/caballos",
               "host": ["{{baseUrl}}"],
               "path": ["caballos"]
             },
-            "description": "Público. Devuelve todos los caballos registrados."
+            "description": "Requiere ADMIN. Devuelve todos los caballos registrados."
           }
         },
         {
-          "name": "Obtener caballo por ID",
+          "name": "Obtener caballo por ID (Admin)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
             "url": {
               "raw": "{{baseUrl}}/caballos/{{caballoId}}",
               "host": ["{{baseUrl}}"],
               "path": ["caballos", "{{caballoId}}"]
             },
-            "description": "Público. Devuelve el detalle de un caballo."
+            "description": "Requiere ADMIN. Devuelve el detalle de un caballo."
           }
         },
         {
@@ -393,29 +397,33 @@
       "name": "04 - Guías",
       "item": [
         {
-          "name": "Listar guías",
+          "name": "Listar guías (Admin)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
             "url": {
               "raw": "{{baseUrl}}/guias",
               "host": ["{{baseUrl}}"],
               "path": ["guias"]
             },
-            "description": "Público. Devuelve todos los guías registrados."
+            "description": "Requiere ADMIN. Devuelve todos los guías registrados."
           }
         },
         {
-          "name": "Obtener guía por ID",
+          "name": "Obtener guía por ID (Admin)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
             "url": {
               "raw": "{{baseUrl}}/guias/{{guiaId}}",
               "host": ["{{baseUrl}}"],
               "path": ["guias", "{{guiaId}}"]
             },
-            "description": "Público. Devuelve el detalle de un guía."
+            "description": "Requiere ADMIN. Devuelve el detalle de un guía."
           }
         },
         {
@@ -526,7 +534,7 @@
       "name": "05 - Salidas",
       "item": [
         {
-          "name": "Listar salidas",
+          "name": "Listar salidas (Admin)",
           "event": [
             {
               "listen": "test",
@@ -546,26 +554,30 @@
           ],
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
             "url": {
               "raw": "{{baseUrl}}/salidas",
               "host": ["{{baseUrl}}"],
               "path": ["salidas"]
             },
-            "description": "Público. Devuelve todas las salidas. Guarda el ID de la primera en `salidaId`.\n\nNota: las salidas se crean automáticamente al crear reservaciones."
+            "description": "Requiere ADMIN. Devuelve todas las salidas. Guarda el ID de la primera en `salidaId`.\n\nNota: las salidas se crean automáticamente al crear reservaciones."
           }
         },
         {
-          "name": "Obtener salida por ID",
+          "name": "Obtener salida por ID (Admin)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
             "url": {
               "raw": "{{baseUrl}}/salidas/{{salidaId}}",
               "host": ["{{baseUrl}}"],
               "path": ["salidas", "{{salidaId}}"]
             },
-            "description": "Público. Devuelve el detalle de una salida con ruta, caballos y guías asignados."
+            "description": "Requiere ADMIN. Devuelve el detalle de una salida con ruta, caballos y guías asignados."
           }
         },
         {
@@ -589,7 +601,7 @@
       "name": "06 - Reservaciones",
       "item": [
         {
-          "name": "[Admin] Crear reservación a nombre de cliente",
+          "name": "[Admin] Crear reservación (cliente no registrado)",
           "event": [
             {
               "listen": "test",
@@ -614,7 +626,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"rutaId\": {{rutaId}},\n  \"fechaProgramada\": \"2026-12-15\",\n  \"tiempoInicio\": \"08:00:00\",\n  \"clientId\": {{clienteId}},\n  \"numPeople\": 2,\n  \"participantes\": [\n    {\n      \"primerNombre\": \"Ana\",\n      \"primerApellido\": \"García\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"1234567890\",\n      \"fechaNacimiento\": \"1995-03-20\",\n      \"alturaCm\": 165,\n      \"pesoKg\": 60.5\n    },\n    {\n      \"primerNombre\": \"Luis\",\n      \"primerApellido\": \"Martínez\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"9876543210\",\n      \"fechaNacimiento\": \"1992-07-10\",\n      \"alturaCm\": 175,\n      \"pesoKg\": 75.0\n    }\n  ]\n}",
+              "raw": "{\n  \"rutaId\": {{rutaId}},\n  \"fechaProgramada\": \"2026-12-15\",\n  \"tiempoInicio\": \"08:00:00\",\n  \"numPeople\": 2,\n  \"participantes\": [\n    {\n      \"primerNombre\": \"Ana\",\n      \"primerApellido\": \"García\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"1234567890\",\n      \"fechaNacimiento\": \"1995-03-20\",\n      \"alturaCm\": 165,\n      \"pesoKg\": 60.5\n    },\n    {\n      \"primerNombre\": \"Luis\",\n      \"primerApellido\": \"Martínez\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"9876543210\",\n      \"fechaNacimiento\": \"1992-07-10\",\n      \"alturaCm\": 175,\n      \"pesoKg\": 75.0\n    }\n  ]\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -622,7 +634,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["admin", "reservaciones"]
             },
-            "description": "Requiere ADMIN. El admin crea una reservación a nombre de un cliente existente (`clientId`).\n\nCrea o reutiliza una salida para la ruta, fecha y hora indicadas. El `numPeople` debe coincidir exactamente con la cantidad de participantes en la lista.\n\nGuarda `reservacionId` y `salidaId` automáticamente."
+            "description": "Requiere ADMIN. El admin crea una reservación para personas que llegan sin cuenta registrada. No se requiere `clientId`; la reservación queda sin cliente asociado (`clienteId: null` en la respuesta).\n\nCrea o reutiliza una salida para la ruta, fecha y hora indicadas. El `numPeople` debe coincidir exactamente con la cantidad de participantes en la lista.\n\nGuarda `reservacionId` y `salidaId` automáticamente."
           }
         },
         {
