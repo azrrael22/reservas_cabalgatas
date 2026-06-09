@@ -35,17 +35,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Auth pública
                         .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
-                        // Lectura pública de recursos
+                        // Lectura pública de rutas
                         .requestMatchers(HttpMethod.GET, "/rutas/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/caballos/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/guias/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/salidas/**").permitAll()
                         // Gestión de caballos — solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/caballos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/caballos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/caballos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/caballos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/caballos/**").hasRole("ADMIN")
                         // Gestión de guías — solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/guias/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/guias/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/guias/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/guias/**").hasRole("ADMIN")
@@ -55,7 +54,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/rutas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/rutas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/rutas/**").hasRole("ADMIN")
-                        // Cancelación de salidas — solo ADMIN
+                        // Gestión de salidas — solo ADMIN
+                        .requestMatchers(HttpMethod.GET, "/salidas/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/salidas/**").hasRole("ADMIN")
                         // Reservaciones de admin
                         .requestMatchers("/admin/**").hasRole("ADMIN")
