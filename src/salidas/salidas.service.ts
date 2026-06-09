@@ -1,36 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { RecursoNoEncontradoException } from '../common/exceptions/recurso-no-encontrado.exception';
 import { ReglaNegocioException } from '../common/exceptions/regla-negocio.exception';
 import { EstadoReservacion, Reservacion } from '../reservaciones/entities/reservacion.entity';
 import { SalidaResponseDto } from './dto/salida-response.dto';
 import { EstadoSalida, Salida } from './entities/salida.entity';
+import { SalidaMapper } from './mappers/salida.mapper';
+import { SalidaRepository } from './repository/salida.repository';
 
 @Injectable()
 export class SalidasService {
   constructor(
-    @InjectRepository(Salida)
-    private readonly salidaRepo: Repository<Salida>,
-    @InjectRepository(Reservacion)
-    private readonly reservacionRepo: Repository<Reservacion>,
+    private readonly salidaRepo: SalidaRepository,
     private readonly dataSource: DataSource,
   ) {}
 
   async listar(): Promise<SalidaResponseDto[]> {
-    const salidas = await this.salidaRepo.find({
-      relations: ['ruta', 'caballos', 'caballos.caballo', 'guias', 'guias.guia'],
-    });
-    return salidas.map(SalidaResponseDto.from);
+    const salidas = await this.salidaRepo.findAll();
+    return salidas.map(SalidaMapper.toResponseDto);
   }
 
   async obtener(id: number): Promise<SalidaResponseDto> {
-    const salida = await this.salidaRepo.findOne({
-      where: { id },
-      relations: ['ruta', 'caballos', 'caballos.caballo', 'guias', 'guias.guia'],
-    });
+    const salida = await this.salidaRepo.findById(id);
     if (!salida) throw new RecursoNoEncontradoException('Salida', id);
-    return SalidaResponseDto.from(salida);
+    return SalidaMapper.toResponseDto(salida);
   }
 
   async cancelar(id: number): Promise<void> {
@@ -38,9 +31,7 @@ export class SalidasService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const salida = await queryRunner.manager.findOne(Salida, {
-        where: { id },
-      });
+      const salida = await queryRunner.manager.findOne(Salida, { where: { id } });
       if (!salida) throw new RecursoNoEncontradoException('Salida', id);
       if (salida.estado === EstadoSalida.CANCELADO) {
         throw new ReglaNegocioException('La salida ya está cancelada');

@@ -1,30 +1,30 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CaballosModule } from '../caballos/caballos.module';
+import { GuiasModule } from '../guias/guias.module';
+import { RutasModule } from '../rutas/rutas.module';
+import { SalidasModule } from '../salidas/salidas.module';
 import { Reservacion } from './entities/reservacion.entity';
 import { Participante } from './entities/participante.entity';
-import { Salida } from '../salidas/entities/salida.entity';
-import { SalidaCaballo } from '../salidas/entities/salida-caballo.entity';
-import { SalidaGuia } from '../salidas/entities/salida-guia.entity';
-import { Caballo } from '../caballos/entities/caballo.entity';
-import { Guia } from '../guias/entities/guia.entity';
-import { Ruta } from '../rutas/entities/ruta.entity';
 import { ReservacionesController } from './reservaciones.controller';
 import { ReservacionesService } from './reservaciones.service';
+import { ReservacionRepository } from './repository/reservacion.repository';
+import { ReservacionTypeOrmRepository } from './repository/reservacion.typeorm.repository';
+import { SalidaRecursosService } from './services/salida-recursos.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Reservacion,
-      Participante,
-      Salida,
-      SalidaCaballo,
-      SalidaGuia,
-      Caballo,
-      Guia,
-      Ruta,
-    ]),
+    TypeOrmModule.forFeature([Reservacion, Participante]),
+    CaballosModule,
+    GuiasModule,
+    RutasModule,
+    SalidasModule,
   ],
   controllers: [ReservacionesController],
-  providers: [ReservacionesService],
+  providers: [
+    ReservacionesService,
+    SalidaRecursosService,
+    { provide: ReservacionRepository, useClass: ReservacionTypeOrmRepository },
+  ],
 })
 export class ReservacionesModule {}

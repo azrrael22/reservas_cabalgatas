@@ -1,34 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { RecursoNoEncontradoException } from '../common/exceptions/recurso-no-encontrado.exception';
 import { ReglaNegocioException } from '../common/exceptions/regla-negocio.exception';
 import { RutaDto } from './dto/ruta.dto';
 import { RutaResponseDto } from './dto/ruta-response.dto';
 import { Ruta } from './entities/ruta.entity';
+import { RutaMapper } from './mappers/ruta.mapper';
+import { RutaRepository } from './repository/ruta.repository';
 
 @Injectable()
 export class RutasService {
-  constructor(
-    @InjectRepository(Ruta)
-    private readonly repo: Repository<Ruta>,
-  ) {}
+  constructor(private readonly repo: RutaRepository) {}
 
   async listar(): Promise<RutaResponseDto[]> {
-    const rutas = await this.repo.find({
-      where: { eliminado: false, isActive: true },
-    });
-    return rutas.map(RutaResponseDto.from);
+    const rutas = await this.repo.findAllActivas();
+    return rutas.map(RutaMapper.toResponseDto);
   }
 
   async obtener(id: number): Promise<RutaResponseDto> {
-    const ruta = await this.repo.findOne({ where: { id, eliminado: false } });
+    const ruta = await this.repo.findById(id);
     if (!ruta) throw new RecursoNoEncontradoException('Ruta', id);
-    return RutaResponseDto.from(ruta);
+    return RutaMapper.toResponseDto(ruta);
   }
 
   async crear(dto: RutaDto): Promise<RutaResponseDto> {
-    const ruta = this.repo.create({
+    const ruta = Object.assign(new Ruta(), {
       nombre: dto.nombre,
       descripcion: dto.descripcion ?? null,
       precio: String(dto.precio),
@@ -38,12 +33,12 @@ export class RutasService {
       isActive: true,
       eliminado: false,
     });
-    await this.repo.save(ruta);
-    return RutaResponseDto.from(ruta);
+    const saved = await this.repo.save(ruta);
+    return RutaMapper.toResponseDto(saved);
   }
 
   async actualizar(id: number, dto: RutaDto): Promise<RutaResponseDto> {
-    const ruta = await this.repo.findOne({ where: { id, eliminado: false } });
+    const ruta = await this.repo.findById(id);
     if (!ruta) throw new RecursoNoEncontradoException('Ruta', id);
     Object.assign(ruta, {
       nombre: dto.nombre,
@@ -53,12 +48,12 @@ export class RutasService {
       duracionMinutos: dto.duracionMinutos,
       imageUrl: dto.imageUrl ?? ruta.imageUrl,
     });
-    await this.repo.save(ruta);
-    return RutaResponseDto.from(ruta);
+    const saved = await this.repo.save(ruta);
+    return RutaMapper.toResponseDto(saved);
   }
 
   async activar(id: number): Promise<void> {
-    const ruta = await this.repo.findOne({ where: { id } });
+    const ruta = await this.repo.findByIdIncludingDeleted(id);
     if (!ruta) throw new RecursoNoEncontradoException('Ruta', id);
     if (ruta.eliminado) throw new ReglaNegocioException('No se puede activar una ruta eliminada');
     ruta.isActive = true;
@@ -66,7 +61,7 @@ export class RutasService {
   }
 
   async desactivar(id: number): Promise<void> {
-    const ruta = await this.repo.findOne({ where: { id } });
+    const ruta = await this.repo.findByIdIncludingDeleted(id);
     if (!ruta) throw new RecursoNoEncontradoException('Ruta', id);
     if (ruta.eliminado) throw new ReglaNegocioException('No se puede desactivar una ruta eliminada');
     ruta.isActive = false;
@@ -74,7 +69,7 @@ export class RutasService {
   }
 
   async eliminar(id: number): Promise<void> {
-    const ruta = await this.repo.findOne({ where: { id, eliminado: false } });
+    const ruta = await this.repo.findById(id);
     if (!ruta) throw new RecursoNoEncontradoException('Ruta', id);
     ruta.eliminado = true;
     ruta.isActive = false;
