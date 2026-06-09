@@ -1,0 +1,734 @@
+{
+  "info": {
+    "_postman_id": "cbs-col-2024",
+    "name": "Cabalgatas Salento",
+    "description": "Colección completa de endpoints de la API REST de Cabalgatas Salento.\n\n**Orden recomendado de ejecución:** Auth → Rutas → Caballos → Guías → Salidas → Reservaciones.\n\nLos scripts de test guardan automáticamente tokens e IDs en las variables de entorno.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "Registro Admin (solo sin admins existentes)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primerNombre\": \"Super\",\n  \"primerApellido\": \"Admin\",\n  \"tipoDocumento\": \"CEDULA\",\n  \"fechaNacimiento\": \"1985-06-20\",\n  \"documento\": \"1000000001\",\n  \"email\": \"admin@salento.com\",\n  \"password\": \"Admin1234!\",\n  \"telefono\": \"+573001234567\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro-admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "registro-admin"]
+            },
+            "description": "Crea el primer usuario ADMIN. Solo funciona cuando no existe ningún admin en el sistema."
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('tokenAdmin', body.token);",
+                  "    pm.environment.set('adminId', body.userId);",
+                  "    console.log('Token admin guardado. userId:', body.userId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@salento.com\",\n  \"password\": \"Admin1234!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica al admin y guarda automáticamente `tokenAdmin` y `adminId` en las variables de entorno."
+          }
+        },
+        {
+          "name": "Registro Cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primerNombre\": \"Ana\",\n  \"primerApellido\": \"García\",\n  \"tipoDocumento\": \"CEDULA\",\n  \"fechaNacimiento\": \"1995-03-20\",\n  \"documento\": \"1234567890\",\n  \"email\": \"cliente@example.com\",\n  \"password\": \"Cliente123!\",\n  \"telefono\": \"+573109876543\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "registro"]
+            },
+            "description": "Registra un nuevo usuario con rol CLIENTE."
+          }
+        },
+        {
+          "name": "Login Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('tokenCliente', body.token);",
+                  "    pm.environment.set('clienteId', body.userId);",
+                  "    console.log('Token cliente guardado. userId:', body.userId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@example.com\",\n  \"password\": \"Cliente123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica al cliente y guarda automáticamente `tokenCliente` y `clienteId` en las variables de entorno."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Rutas",
+      "item": [
+        {
+          "name": "Listar rutas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas"]
+            },
+            "description": "Público. Devuelve todas las rutas disponibles."
+          }
+        },
+        {
+          "name": "Obtener ruta por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas", "{{rutaId}}"]
+            },
+            "description": "Público. Devuelve el detalle de una ruta."
+          }
+        },
+        {
+          "name": "Crear ruta (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('rutaId', body.id);",
+                  "    console.log('rutaId guardado:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ruta Valle del Quindío\",\n  \"descripcion\": \"Recorrido por cafetales y miradores con vistas al valle\",\n  \"precio\": 75000.00,\n  \"dificultad\": \"FACIL\",\n  \"duracionMinutos\": 90,\n  \"imageUrl\": \"https://example.com/ruta-valle.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rutas",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas"]
+            },
+            "description": "Requiere ADMIN. Guarda el `rutaId` automáticamente para las siguientes peticiones.\n\nValores de `dificultad`: FACIL, MEDIA, DIFICIL."
+          }
+        },
+        {
+          "name": "Actualizar ruta (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ruta Valle del Quindío — Actualizada\",\n  \"descripcion\": \"Recorrido por cafetales, miradores y el río\",\n  \"precio\": 80000.00,\n  \"dificultad\": \"MEDIA\",\n  \"duracionMinutos\": 120,\n  \"imageUrl\": \"https://example.com/ruta-valle-v2.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas", "{{rutaId}}"]
+            },
+            "description": "Requiere ADMIN. Reemplaza todos los campos de la ruta."
+          }
+        },
+        {
+          "name": "Activar ruta (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}/activar",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas", "{{rutaId}}", "activar"]
+            },
+            "description": "Requiere ADMIN. Marca la ruta como activa (is_active = true)."
+          }
+        },
+        {
+          "name": "Desactivar ruta (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}/desactivar",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas", "{{rutaId}}", "desactivar"]
+            },
+            "description": "Requiere ADMIN. Marca la ruta como inactiva (is_active = false)."
+          }
+        },
+        {
+          "name": "Eliminar ruta (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rutas/{{rutaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas", "{{rutaId}}"]
+            },
+            "description": "Requiere ADMIN. Borrado lógico: marca `eliminado = true`. Irreversible."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Caballos",
+      "item": [
+        {
+          "name": "Listar caballos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/caballos",
+              "host": ["{{baseUrl}}"],
+              "path": ["caballos"]
+            },
+            "description": "Público. Devuelve todos los caballos registrados."
+          }
+        },
+        {
+          "name": "Obtener caballo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/caballos/{{caballoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["caballos", "{{caballoId}}"]
+            },
+            "description": "Público. Devuelve el detalle de un caballo."
+          }
+        },
+        {
+          "name": "Crear caballo (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('caballoId', body.id);",
+                  "    console.log('caballoId guardado:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Relámpago\",\n  \"raza\": \"Paso Fino\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/caballos",
+              "host": ["{{baseUrl}}"],
+              "path": ["caballos"]
+            },
+            "description": "Requiere ADMIN. Guarda el `caballoId` automáticamente."
+          }
+        },
+        {
+          "name": "Actualizar caballo (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Relámpago II\",\n  \"raza\": \"Paso Fino Colombiano\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/caballos/{{caballoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["caballos", "{{caballoId}}"]
+            },
+            "description": "Requiere ADMIN. Reemplaza nombre y raza del caballo."
+          }
+        },
+        {
+          "name": "Activar caballo (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/caballos/{{caballoId}}/activar",
+              "host": ["{{baseUrl}}"],
+              "path": ["caballos", "{{caballoId}}", "activar"]
+            },
+            "description": "Requiere ADMIN. Marca el caballo como disponible."
+          }
+        },
+        {
+          "name": "Desactivar caballo (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/caballos/{{caballoId}}/desactivar",
+              "host": ["{{baseUrl}}"],
+              "path": ["caballos", "{{caballoId}}", "desactivar"]
+            },
+            "description": "Requiere ADMIN. Marca el caballo como no disponible."
+          }
+        },
+        {
+          "name": "Eliminar caballo (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/caballos/{{caballoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["caballos", "{{caballoId}}"]
+            },
+            "description": "Requiere ADMIN. Borrado lógico: marca `eliminado = true`. Irreversible."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Guías",
+      "item": [
+        {
+          "name": "Listar guías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/guias",
+              "host": ["{{baseUrl}}"],
+              "path": ["guias"]
+            },
+            "description": "Público. Devuelve todos los guías registrados."
+          }
+        },
+        {
+          "name": "Obtener guía por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/guias/{{guiaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["guias", "{{guiaId}}"]
+            },
+            "description": "Público. Devuelve el detalle de un guía."
+          }
+        },
+        {
+          "name": "Crear guía (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('guiaId', body.id);",
+                  "    console.log('guiaId guardado:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primerNombre\": \"Carlos\",\n  \"primerApellido\": \"Herrera\",\n  \"tipoDocumento\": \"CEDULA\",\n  \"fechaNacimiento\": \"1990-05-15\",\n  \"documento\": \"1023456789\",\n  \"telefono\": \"+573109876543\",\n  \"email\": \"carlos.herrera@salento.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/guias",
+              "host": ["{{baseUrl}}"],
+              "path": ["guias"]
+            },
+            "description": "Requiere ADMIN. Guarda el `guiaId` automáticamente.\n\nValores de `tipoDocumento`: CEDULA, PASAPORTE, CEDULA_EXTRANJERIA, TARJETA_IDENTIDAD.\n\nEl teléfono debe incluir indicativo internacional (ej: +57...)."
+          }
+        },
+        {
+          "name": "Actualizar guía (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primerNombre\": \"Carlos Alberto\",\n  \"primerApellido\": \"Herrera Ruiz\",\n  \"tipoDocumento\": \"CEDULA\",\n  \"fechaNacimiento\": \"1990-05-15\",\n  \"documento\": \"1023456789\",\n  \"telefono\": \"+573205551234\",\n  \"email\": \"carlos.herrera.nuevo@salento.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/guias/{{guiaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["guias", "{{guiaId}}"]
+            },
+            "description": "Requiere ADMIN. Reemplaza todos los campos del guía."
+          }
+        },
+        {
+          "name": "Activar guía (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/guias/{{guiaId}}/activar",
+              "host": ["{{baseUrl}}"],
+              "path": ["guias", "{{guiaId}}", "activar"]
+            },
+            "description": "Requiere ADMIN. Marca el guía como disponible."
+          }
+        },
+        {
+          "name": "Desactivar guía (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/guias/{{guiaId}}/desactivar",
+              "host": ["{{baseUrl}}"],
+              "path": ["guias", "{{guiaId}}", "desactivar"]
+            },
+            "description": "Requiere ADMIN. Marca el guía como no disponible."
+          }
+        },
+        {
+          "name": "Eliminar guía (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/guias/{{guiaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["guias", "{{guiaId}}"]
+            },
+            "description": "Requiere ADMIN. Borrado lógico: marca `eliminado = true`. Irreversible."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Salidas",
+      "item": [
+        {
+          "name": "Listar salidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.environment.set('salidaId', body[0].id);",
+                  "        console.log('salidaId guardado:', body[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/salidas",
+              "host": ["{{baseUrl}}"],
+              "path": ["salidas"]
+            },
+            "description": "Público. Devuelve todas las salidas. Guarda el ID de la primera en `salidaId`.\n\nNota: las salidas se crean automáticamente al crear reservaciones."
+          }
+        },
+        {
+          "name": "Obtener salida por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/salidas/{{salidaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["salidas", "{{salidaId}}"]
+            },
+            "description": "Público. Devuelve el detalle de una salida con ruta, caballos y guías asignados."
+          }
+        },
+        {
+          "name": "Cancelar salida (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/salidas/{{salidaId}}/cancelar",
+              "host": ["{{baseUrl}}"],
+              "path": ["salidas", "{{salidaId}}", "cancelar"]
+            },
+            "description": "Requiere ADMIN. Cambia el estado de la salida a `cancelado`.\n\nEstados posibles: programado → en_curso → completado | cancelado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Reservaciones",
+      "item": [
+        {
+          "name": "[Admin] Crear reservación a nombre de cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('reservacionId', body.id);",
+                  "    if (body.salida) pm.environment.set('salidaId', body.salida.id);",
+                  "    console.log('reservacionId guardado:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rutaId\": {{rutaId}},\n  \"fechaProgramada\": \"2026-12-15\",\n  \"tiempoInicio\": \"08:00:00\",\n  \"clientId\": {{clienteId}},\n  \"numPeople\": 2,\n  \"participantes\": [\n    {\n      \"primerNombre\": \"Ana\",\n      \"primerApellido\": \"García\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"1234567890\",\n      \"fechaNacimiento\": \"1995-03-20\",\n      \"alturaCm\": 165,\n      \"pesoKg\": 60.5\n    },\n    {\n      \"primerNombre\": \"Luis\",\n      \"primerApellido\": \"Martínez\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"9876543210\",\n      \"fechaNacimiento\": \"1992-07-10\",\n      \"alturaCm\": 175,\n      \"pesoKg\": 75.0\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/reservaciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "reservaciones"]
+            },
+            "description": "Requiere ADMIN. El admin crea una reservación a nombre de un cliente existente (`clientId`).\n\nCrea o reutiliza una salida para la ruta, fecha y hora indicadas. El `numPeople` debe coincidir exactamente con la cantidad de participantes en la lista.\n\nGuarda `reservacionId` y `salidaId` automáticamente."
+          }
+        },
+        {
+          "name": "[Cliente] Crear reservación propia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.environment.set('reservacionId', body.id);",
+                  "    if (body.salida) pm.environment.set('salidaId', body.salida.id);",
+                  "    console.log('reservacionId guardado:', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCliente}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rutaId\": {{rutaId}},\n  \"fechaProgramada\": \"2026-12-20\",\n  \"tiempoInicio\": \"10:00:00\",\n  \"numPeople\": 1,\n  \"participantes\": [\n    {\n      \"primerNombre\": \"Ana\",\n      \"primerApellido\": \"García\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"1234567890\",\n      \"fechaNacimiento\": \"1995-03-20\",\n      \"alturaCm\": 165,\n      \"pesoKg\": 60.5\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservaciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservaciones"]
+            },
+            "description": "Requiere autenticación como CLIENTE. El usuario autenticado es el cliente de la reservación.\n\nEl `numPeople` debe coincidir exactamente con la cantidad de participantes.\n\nGuarda `reservacionId` y `salidaId` automáticamente."
+          }
+        },
+        {
+          "name": "[Cliente] Listar mis reservaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenCliente}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservaciones/mis-reservas",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservaciones", "mis-reservas"]
+            },
+            "description": "Requiere autenticación como CLIENTE. Devuelve todas las reservaciones del cliente autenticado."
+          }
+        },
+        {
+          "name": "[Cliente/Admin] Obtener reservación por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenCliente}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservaciones/{{reservacionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservaciones", "{{reservacionId}}"]
+            },
+            "description": "Requiere autenticación. El cliente solo puede ver sus propias reservaciones; el admin puede ver cualquiera.\n\nCambia el header Authorization a `Bearer {{tokenAdmin}}` para probar como admin."
+          }
+        },
+        {
+          "name": "[Cliente] Actualizar reservación",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenCliente}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numPeople\": 2,\n  \"participantes\": [\n    {\n      \"primerNombre\": \"Ana\",\n      \"primerApellido\": \"García\",\n      \"tipoDocumento\": \"CEDULA\",\n      \"documento\": \"1234567890\",\n      \"fechaNacimiento\": \"1995-03-20\",\n      \"alturaCm\": 165,\n      \"pesoKg\": 60.5\n    },\n    {\n      \"primerNombre\": \"Pedro\",\n      \"primerApellido\": \"Ramírez\",\n      \"tipoDocumento\": \"PASAPORTE\",\n      \"documento\": \"AB123456\",\n      \"fechaNacimiento\": \"1988-11-30\",\n      \"alturaCm\": 180,\n      \"pesoKg\": 82.0\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservaciones/{{reservacionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservaciones", "{{reservacionId}}"]
+            },
+            "description": "Requiere autenticación como CLIENTE dueño de la reservación. Permite modificar el número de personas y la lista de participantes.\n\nEl `numPeople` debe coincidir con la cantidad de participantes enviados."
+          }
+        },
+        {
+          "name": "[Cliente] Cancelar reservación",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenCliente}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservaciones/{{reservacionId}}/cancelar",
+              "host": ["{{baseUrl}}"],
+              "path": ["reservaciones", "{{reservacionId}}", "cancelar"]
+            },
+            "description": "Requiere autenticación como CLIENTE dueño de la reservación. Cambia el estado a `cancelado`."
+          }
+        }
+      ]
+    }
+  ]
+}
