@@ -30,6 +30,10 @@ export class ReservacionTypeOrmRepository extends ReservacionRepository {
     return this.repo.findOne({ where: { id }, relations: RELATIONS_COMPLETAS });
   }
 
+  findAll(): Promise<Reservacion[]> {
+    return this.repo.find({ relations: RELATIONS_COMPLETAS });
+  }
+
   findByCliente(clienteId: number): Promise<Reservacion[]> {
     return this.repo.find({
       where: { cliente: { id: clienteId } },

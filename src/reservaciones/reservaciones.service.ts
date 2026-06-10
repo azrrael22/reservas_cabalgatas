@@ -5,7 +5,7 @@ import { ReglaNegocioException } from '../common/exceptions/regla-negocio.except
 import { RutaRepository } from '../rutas/repository/ruta.repository';
 import { EstadoSalida, Salida } from '../salidas/entities/salida.entity';
 import { SalidaRepository } from '../salidas/repository/salida.repository';
-import { Usuario } from '../usuarios/entities/usuario.entity';
+import { RolUsuario, Usuario } from '../usuarios/entities/usuario.entity';
 import { ReservacionAdminDto } from './dto/reservacion-admin.dto';
 import { ReservacionClienteDto } from './dto/reservacion-cliente.dto';
 import { ReservacionResponseDto } from './dto/reservacion-response.dto';
@@ -120,7 +120,7 @@ export class ReservacionesService {
 
       await queryRunner.commitTransaction();
 
-      return this.obtener(reservacion.id);
+      return this.buscarYMapear(reservacion.id);
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
@@ -132,13 +132,11 @@ export class ReservacionesService {
   async actualizar(
     id: number,
     dto: ReservacionUpdateDto,
-    clienteId: number,
+    usuario: Usuario,
   ): Promise<ReservacionResponseDto> {
     const reservacion = await this.reservacionRepo.findById(id);
     if (!reservacion) throw new RecursoNoEncontradoException('Reservacion', id);
-    if (reservacion.cliente?.id !== clienteId) {
-      throw new ForbiddenException('No tienes permiso para modificar esta reservación');
-    }
+    this.verificarOwnershipCliente(reservacion, usuario);
     if (reservacion.estado !== EstadoReservacion.RESERVADO) {
       throw new ReglaNegocioException('Solo se pueden modificar reservaciones en estado RESERVADO');
     }
@@ -194,7 +192,7 @@ export class ReservacionesService {
       await queryRunner.manager.save(reservacion);
 
       await queryRunner.commitTransaction();
-      return this.obtener(reservacion.id);
+      return this.buscarYMapear(reservacion.id);
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
@@ -203,12 +201,10 @@ export class ReservacionesService {
     }
   }
 
-  async cancelar(id: number, clienteId: number): Promise<void> {
+  async cancelar(id: number, usuario: Usuario): Promise<void> {
     const reservacion = await this.reservacionRepo.findById(id);
     if (!reservacion) throw new RecursoNoEncontradoException('Reservacion', id);
-    if (reservacion.cliente?.id !== clienteId) {
-      throw new ForbiddenException('No tienes permiso para cancelar esta reservación');
-    }
+    this.verificarOwnershipCliente(reservacion, usuario);
     if (reservacion.estado !== EstadoReservacion.RESERVADO) {
       throw new ReglaNegocioException('Solo se pueden cancelar reservaciones en estado RESERVADO');
     }
@@ -216,15 +212,34 @@ export class ReservacionesService {
     await this.reservacionRepo.save(reservacion);
   }
 
-  async obtener(id: number): Promise<ReservacionResponseDto> {
+  async obtener(id: number, usuario: Usuario): Promise<ReservacionResponseDto> {
     const reservacion = await this.reservacionRepo.findById(id);
     if (!reservacion) throw new RecursoNoEncontradoException('Reservacion', id);
+    this.verificarOwnershipCliente(reservacion, usuario);
     return ReservacionMapper.toResponseDto(reservacion);
   }
 
   async misReservaciones(clienteId: number): Promise<ReservacionResponseDto[]> {
     const reservaciones = await this.reservacionRepo.findByCliente(clienteId);
     return reservaciones.map(ReservacionMapper.toResponseDto);
+  }
+
+  async listarTodas(): Promise<ReservacionResponseDto[]> {
+    const reservaciones = await this.reservacionRepo.findAll();
+    return reservaciones.map(ReservacionMapper.toResponseDto);
+  }
+
+  private async buscarYMapear(id: number): Promise<ReservacionResponseDto> {
+    const reservacion = await this.reservacionRepo.findById(id);
+    if (!reservacion) throw new RecursoNoEncontradoException('Reservacion', id);
+    return ReservacionMapper.toResponseDto(reservacion);
+  }
+
+  private verificarOwnershipCliente(reservacion: Reservacion, usuario: Usuario): void {
+    if (usuario.role === RolUsuario.ADMIN) return;
+    if (reservacion.cliente?.id !== usuario.id) {
+      throw new ForbiddenException('No tienes permiso para acceder a esta reservación');
+    }
   }
 
   private calcularTiempoFin(tiempoInicio: string, duracionMinutos: number): string {

@@ -50,7 +50,7 @@ export class ReservacionesController {
     @Body() dto: ReservacionUpdateDto,
     @CurrentUser() usuario: Usuario,
   ): Promise<ReservacionResponseDto> {
-    return this.service.actualizar(id, dto, usuario.id);
+    return this.service.actualizar(id, dto, usuario);
   }
 
   @Patch('reservaciones/:id/cancelar')
@@ -59,7 +59,7 @@ export class ReservacionesController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() usuario: Usuario,
   ): Promise<void> {
-    return this.service.cancelar(id, usuario.id);
+    return this.service.cancelar(id, usuario);
   }
 
   @Get('reservaciones/mis-reservas')
@@ -70,7 +70,16 @@ export class ReservacionesController {
   }
 
   @Get('reservaciones/:id')
-  obtener(@Param('id', ParseIntPipe) id: number): Promise<ReservacionResponseDto> {
-    return this.service.obtener(id);
+  obtener(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() usuario: Usuario,
+  ): Promise<ReservacionResponseDto> {
+    return this.service.obtener(id, usuario);
+  }
+
+  @Roles(RolUsuario.ADMIN)
+  @Get('admin/reservaciones')
+  listarTodas(): Promise<ReservacionResponseDto[]> {
+    return this.service.listarTodas();
   }
 }
