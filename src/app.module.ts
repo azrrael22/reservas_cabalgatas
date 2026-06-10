@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { CaballosModule } from './caballos/caballos.module';
 import { GuiasModule } from './guias/guias.module';
+import { MailModule } from './mail/mail.module';
 import { RutasModule } from './rutas/rutas.module';
 import { SalidasModule } from './salidas/salidas.module';
 import { ReservacionesModule } from './reservaciones/reservaciones.module';
@@ -38,6 +39,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     UsuariosModule,
     CaballosModule,
     GuiasModule,
+    MailModule,
     RutasModule,
     SalidasModule,
     ReservacionesModule,

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CaballosModule } from '../caballos/caballos.module';
 import { GuiasModule } from '../guias/guias.module';
+import { MailModule } from '../mail/mail.module';
 import { RutasModule } from '../rutas/rutas.module';
 import { SalidasModule } from '../salidas/salidas.module';
 import { Reservacion } from './entities/reservacion.entity';
@@ -17,6 +18,7 @@ import { SalidaRecursosService } from './services/salida-recursos.service';
     TypeOrmModule.forFeature([Reservacion, Participante]),
     CaballosModule,
     GuiasModule,
+    MailModule,
     RutasModule,
     SalidasModule,
   ],

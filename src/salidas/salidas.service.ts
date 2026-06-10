@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Not } from 'typeorm';
 import { RecursoNoEncontradoException } from '../common/exceptions/recurso-no-encontrado.exception';
 import { ReglaNegocioException } from '../common/exceptions/regla-negocio.exception';
+import { MailService } from '../mail/mail.service';
 import { EstadoReservacion, Reservacion } from '../reservaciones/entities/reservacion.entity';
 import { SalidaResponseDto } from './dto/salida-response.dto';
 import { EstadoSalida, Salida } from './entities/salida.entity';
@@ -13,6 +14,7 @@ export class SalidasService {
   constructor(
     private readonly salidaRepo: SalidaRepository,
     private readonly dataSource: DataSource,
+    private readonly mailService: MailService,
   ) {}
 
   async listar(): Promise<SalidaResponseDto[]> {
@@ -40,6 +42,11 @@ export class SalidasService {
         throw new ReglaNegocioException('No se puede cancelar una salida completada');
       }
 
+      const reservacionesActivas = await queryRunner.manager.find(Reservacion, {
+        where: { salida: { id }, estado: Not(EstadoReservacion.CANCELADO) },
+        relations: ['cliente'],
+      });
+
       salida.estado = EstadoSalida.CANCELADO;
       await queryRunner.manager.save(salida);
 
@@ -52,6 +59,8 @@ export class SalidasService {
         .execute();
 
       await queryRunner.commitTransaction();
+
+      await this.mailService.notificarCancelacionSalidaAClientes(reservacionesActivas, salida);
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;

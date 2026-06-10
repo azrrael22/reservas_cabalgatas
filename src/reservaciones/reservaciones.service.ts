@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { RecursoNoEncontradoException } from '../common/exceptions/recurso-no-encontrado.exception';
 import { ReglaNegocioException } from '../common/exceptions/regla-negocio.exception';
+import { MailService } from '../mail/mail.service';
 import { RutaRepository } from '../rutas/repository/ruta.repository';
 import { EstadoSalida, Salida } from '../salidas/entities/salida.entity';
 import { SalidaRepository } from '../salidas/repository/salida.repository';
@@ -26,6 +27,7 @@ export class ReservacionesService {
     private readonly salidaRepo: SalidaRepository,
     private readonly salidaRecursos: SalidaRecursosService,
     private readonly dataSource: DataSource,
+    private readonly mailService: MailService,
   ) {}
 
   async crearComoCliente(
@@ -210,6 +212,7 @@ export class ReservacionesService {
     }
     reservacion.estado = EstadoReservacion.CANCELADO;
     await this.reservacionRepo.save(reservacion);
+    await this.mailService.notificarCancelacionReservacion(reservacion);
   }
 
   async obtener(id: number, usuario: Usuario): Promise<ReservacionResponseDto> {
