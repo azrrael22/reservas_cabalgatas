@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CaballosModule } from '../caballos/caballos.module';
 import { GuiasModule } from '../guias/guias.module';
 import { MailModule } from '../mail/mail.module';
+import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 import { RutasModule } from '../rutas/rutas.module';
 import { SalidasModule } from '../salidas/salidas.module';
 import { Reservacion } from './entities/reservacion.entity';
@@ -19,6 +20,7 @@ import { SalidaRecursosService } from './services/salida-recursos.service';
     CaballosModule,
     GuiasModule,
     MailModule,
+    NotificacionesModule,
     RutasModule,
     SalidasModule,
   ],

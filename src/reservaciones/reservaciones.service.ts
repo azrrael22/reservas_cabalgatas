@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { RecursoNoEncontradoException } from '../common/exceptions/recurso-no-encontrado.exception';
 import { ReglaNegocioException } from '../common/exceptions/regla-negocio.exception';
 import { MailService } from '../mail/mail.service';
+import { NotificacionesService } from '../notificaciones/notificaciones.service';
 import { RutaRepository } from '../rutas/repository/ruta.repository';
 import { EstadoSalida, Salida } from '../salidas/entities/salida.entity';
 import { SalidaRepository } from '../salidas/repository/salida.repository';
@@ -28,6 +29,7 @@ export class ReservacionesService {
     private readonly salidaRecursos: SalidaRecursosService,
     private readonly dataSource: DataSource,
     private readonly mailService: MailService,
+    private readonly notificacionesService: NotificacionesService,
   ) {}
 
   async crearComoCliente(
@@ -122,6 +124,7 @@ export class ReservacionesService {
 
       await queryRunner.commitTransaction();
 
+      void this.notificacionesService.notificarCambioSalida(salida.id);
       return this.buscarYMapear(reservacion.id);
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -194,6 +197,8 @@ export class ReservacionesService {
       await queryRunner.manager.save(reservacion);
 
       await queryRunner.commitTransaction();
+
+      void this.notificacionesService.notificarCambioSalida(reservacion.salida.id);
       return this.buscarYMapear(reservacion.id);
     } catch (err) {
       await queryRunner.rollbackTransaction();

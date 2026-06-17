@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Reservacion } from '../reservaciones/entities/reservacion.entity';
 import { Salida } from '../salidas/entities/salida.entity';
+import { Usuario } from '../usuarios/entities/usuario.entity';
+import { ResumenSalida } from '../notificaciones/dto/resumen-salida.dto';
 
 @Injectable()
 export class MailService {
@@ -55,6 +57,90 @@ export class MailService {
         this.logger.error(`Error al enviar correo de cancelación de salida a ${email}: ${err.message}`);
       }
     }
+  }
+
+  async notificarResumenAdmin(
+    admin: Usuario,
+    salidas: ResumenSalida[],
+    dias: number,
+  ): Promise<void> {
+    try {
+      await this.mailerService.sendMail({
+        to: admin.email,
+        subject: `Resumen de salidas — próximos ${dias} días | Cabalgatas Salento`,
+        html: this.plantillaResumenAdmin(salidas, dias),
+      });
+    } catch (err) {
+      this.logger.error(`Error al enviar resumen al admin: ${err.message}`);
+    }
+  }
+
+  async notificarCambioSalidaAdmin(admin: Usuario, salida: ResumenSalida): Promise<void> {
+    try {
+      await this.mailerService.sendMail({
+        to: admin.email,
+        subject: `Actualización de salida — ${salida.fechaProgramada} ${salida.rutaNombre} | Cabalgatas Salento`,
+        html: this.plantillaCambioSalida(salida),
+      });
+    } catch (err) {
+      this.logger.error(`Error al notificar cambio de salida #${salida.id} al admin: ${err.message}`);
+    }
+  }
+
+  private plantillaResumenAdmin(salidas: ResumenSalida[], dias: number): string {
+    const filas =
+      salidas.length === 0
+        ? `<tr><td colspan="5" style="padding:12px; text-align:center; color:#888;">Sin salidas programadas en este período</td></tr>`
+        : salidas
+            .map(
+              (s) => `
+            <tr>
+              <td style="padding:8px; border:1px solid #ddd;">${s.fechaProgramada}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${s.tiempoInicio.slice(0, 5)}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${s.tiempoFin.slice(0, 5)}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${s.rutaNombre}</td>
+              <td style="padding:8px; border:1px solid #ddd; text-align:center;">${s.totalPersonas}</td>
+            </tr>`,
+            )
+            .join('');
+
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto;">
+        <h2 style="color: #8B4513;">Resumen de Salidas — Próximos ${dias} días</h2>
+        <p>Este es el resumen de las salidas programadas para los próximos <strong>${dias} días</strong>:</p>
+        <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+          <thead>
+            <tr style="background:#8B4513; color:#fff;">
+              <th style="padding:8px; text-align:left;">Fecha</th>
+              <th style="padding:8px; text-align:left;">Inicio</th>
+              <th style="padding:8px; text-align:left;">Fin</th>
+              <th style="padding:8px; text-align:left;">Ruta</th>
+              <th style="padding:8px; text-align:center;">Personas</th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
+        </table>
+        <p style="color: #888; font-size: 12px;">Cabalgatas Salento – Salento, Quindío, Colombia</p>
+      </div>
+    `;
+  }
+
+  private plantillaCambioSalida(salida: ResumenSalida): string {
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #8B4513;">Actualización de Salida – Cabalgatas Salento</h2>
+        <p>Se ha creado o actualizado una reservación en la siguiente salida:</p>
+        <table style="width:100%; border-collapse: collapse; margin: 16px 0;">
+          <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Ruta</strong></td><td style="padding:8px; border:1px solid #ddd;">${salida.rutaNombre}</td></tr>
+          <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Fecha</strong></td><td style="padding:8px; border:1px solid #ddd;">${salida.fechaProgramada}</td></tr>
+          <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Hora inicio</strong></td><td style="padding:8px; border:1px solid #ddd;">${salida.tiempoInicio.slice(0, 5)}</td></tr>
+          <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Hora fin</strong></td><td style="padding:8px; border:1px solid #ddd;">${salida.tiempoFin.slice(0, 5)}</td></tr>
+          <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Total personas</strong></td><td style="padding:8px; border:1px solid #ddd;">${salida.totalPersonas}</td></tr>
+          <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Estado</strong></td><td style="padding:8px; border:1px solid #ddd;">${salida.estado}</td></tr>
+        </table>
+        <p style="color: #888; font-size: 12px;">Cabalgatas Salento – Salento, Quindío, Colombia</p>
+      </div>
+    `;
   }
 
   private plantillaCancelacionReservacion(datos: {

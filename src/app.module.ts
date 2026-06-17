@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
@@ -10,6 +11,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
 import { CaballosModule } from './caballos/caballos.module';
 import { GuiasModule } from './guias/guias.module';
 import { MailModule } from './mail/mail.module';
+import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { RutasModule } from './rutas/rutas.module';
 import { SalidasModule } from './salidas/salidas.module';
 import { ReservacionesModule } from './reservaciones/reservaciones.module';
@@ -18,6 +20,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -40,6 +43,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     CaballosModule,
     GuiasModule,
     MailModule,
+    NotificacionesModule,
     RutasModule,
     SalidasModule,
     ReservacionesModule,
